@@ -11,4 +11,6 @@ class registe_form(forms.Form):
     registe_email = forms.EmailField()
     registe_password = forms.CharField()
     registe_email_code = forms.CharField()
-
+class login_form(forms.Form):
+    login_username_or_email=forms.CharField()
+    login_password = forms.CharField()

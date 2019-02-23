@@ -21,4 +21,7 @@ urlpatterns = [
     path('main/',views.main),
     path('send_registe_identifying/',views.send_registe_identifying),
     path('registe/',views.registe),
+    path('login/',views.login),
+    path('index/',views.index),
+    path('logout/',views.logout),
 ]

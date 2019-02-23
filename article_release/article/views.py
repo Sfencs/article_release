@@ -1,6 +1,6 @@
 from django.shortcuts import render,redirect,HttpResponse
 
-from django.db.models import F
+from django.db.models import F,Q
 import json
 import datetime
 from article import models
@@ -8,7 +8,15 @@ from tools import email_send
 from tools import forms
 # Create your views here.
 
+def auth(func):
+    def inner(request, *args, **kwargs):
 
+        is_login = request.session.get('is_login')
+        if is_login:
+            return func(request, *args, **kwargs)
+        else:
+            return redirect('/main')
+    return inner
 
 class baseResponse:
     def __init__(self):
@@ -16,9 +24,13 @@ class baseResponse:
         self.error_message=None
         self.success_message=None
 
-def main(request):
-    if request.method=='GET':
 
+def main(request):
+    # 主界面
+    if request.method=='GET':
+        is_login = request.session.get('is_login')
+        if is_login:
+            return redirect('/index')
         return render(request,'main.html')
 
 
@@ -81,7 +93,7 @@ def registe(request):
         ret=baseResponse()
         if form.is_valid():
             value_dict = form.clean()
-            print(value_dict)
+            # print(value_dict)
             current_date=datetime.datetime.now()
             limit = current_date - datetime.timedelta(minutes=2)
             is_valid_code = models.SendMsg.objects.filter(email=value_dict['registe_email'],
@@ -128,4 +140,45 @@ def registe(request):
             ret.error_message=message
         return HttpResponse(json.dumps(ret.__dict__))
 
+def login(request):
+    if request.method=='GET':
+        return redirect('/main/')
+    elif request.method == 'POST':
+        form = forms.login_form(request.POST)
+        ret = baseResponse()
+        if form.is_valid():
+            value_dict = form.clean()
+            obj=models.UserInfo.objects.filter(Q(Q(username=value_dict['login_username_or_email'])&Q(password=value_dict['login_password'])|Q(email=value_dict['login_username_or_email'])&Q(password=value_dict['login_password']))).first()
+            if obj is None:
+                ret.status = False
+                ret.error_message = '用户名或邮箱或密码输入错误'
+            else:
+                ret.status = True
+                user_info_dict = {'nid': obj.nid, 'email': obj.email,
+                                  'username': obj.username}
+                request.session['is_login'] = True
+                request.session['user_info'] = user_info_dict
+        else:
+            ret.status = False
+            error_msg = form.errors.as_json()
+            error = json.loads(error_msg)
 
+            key_list=error.keys()
+            item=''
+            for i in key_list:
+                item=i
+
+            message=error[item][0]['message']
+            ret.error_message=message
+        return HttpResponse(json.dumps(ret.__dict__))
+
+def logout(request):
+    # 注销
+    request.session.clear()
+    return redirect('/main')
+
+@auth
+def index(request):
+    if request.method=='GET':
+
+        return render(request,'index.html')

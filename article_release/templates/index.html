@@ -49,7 +49,7 @@
             color: white;
             text-decoration:none;
         }
-        .login-content span{
+        .logout-content span{
             cursor: pointer;
             color: white;
             text-align: center;
@@ -58,6 +58,9 @@
             margin-left: 8px;
             padding-right: 5px;
             padding-left: 5px;
+        }
+        .logout-content span a{
+            color: white;
         }
         .login-content span:hover{
             background-color: blue;
@@ -229,8 +232,7 @@
 <div class="head">
     <div class="head-content" >
         <div class="title"><a href="#">article</a></div>
-        <div class="login-content"><span id="login">登录</span><span id="registe" >注册</span></div>
-
+        <div class="logout-content "><span id="logout"><a href="/logout">注销</a></span></div>
     </div>
 </div>
 <div class="main-content-band">
@@ -245,36 +247,7 @@
 </div>
 <div class="shade hide">
 </div>
-<div class="module-login hide">
-    <div class="user-login">
 
-        <div class="module-content">
-        <span class="module-title">登录</span>
-        <div class="login-error-message"></div>
-        <form id="login_form">
-        <input class="module-input-text" name="login_username_or_email" type="text" placeholder="请输入用户名或邮箱">
-        <input class="module-input-text" name="login_password" type="password" placeholder="请输入密码">
-        <input class="module-button" id="login_button" type="button" value="登录">
-        {% csrf_token %}
-        </form>
-        </div>
-    </div>
-    <div class="user-registe" >
-        <div class="module-content">
-        <span class="module-title">注册</span><span class="module-back">×</span>
-        <div class="registe-error-message"></div>
-        <form id="registe_form">
-            <input name="registe_username" class="module-input-text"type="text" placeholder="请输入用户名">
-            <input name="registe_email" id="registe_email" class="module-input-text" type="text" placeholder="请输入邮箱">
-            <input  name="registe_email_code" id="registe_identifying_code" class="module-input-text" type="text" placeholder="请输入验证码">
-                <div class='get-registe-identifying'>获取验证码</div>
-            <input name="registe_password"  class="module-input-text" type="password" placeholder="请输入密码">
-            <input id="registe_button" class="module-button" type="button" value="注册">
-            {% csrf_token %}
-        </form>
-        </div>
-    </div>
-</div>
 </body>
 <script src="/static/jquery-3.3.1.js"></script>
 <script>
@@ -282,120 +255,10 @@ $(function () {
     $.ajaxSetup({
     data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
 });
-    login_module();
-    module_back()
-    get_registe_identifying()
-    registe()
-    login()
+
 })
 
- function login_module() {
-    //点击登录的模态对话框出现
-     $('#login').click(function () {
 
-         $('.shade,.module-login').removeClass('hide');
-     })
-      $('#registe').click(function () {
-
-     $('.shade,.module-login').removeClass('hide');
- })
- }
-function module_back() {
-     $('.module-back').click(function () {
-
-         $('.shade,.module-login').addClass('hide');
-     })
-
- }
- 
- function get_registe_identifying() {
-    //点击获取验证码
-     $('.get-registe-identifying').click(function () {
-         if($(this).hasClass('sending')){
-             return
-         }
-         //清空错误信息
-         $('.registe-error-message').empty()
-        registe_email=$('#registe_email').val();
-         //先去除两端空白
-         if(registe_email.trim().length==0){
-             $('.registe-error-message').text('请输入邮箱')
-             return;
-         }
-         var ths = $(this);
-         var time = 60;
-         $.ajax({
-             url:'/send_registe_identifying/',
-             method:'POST',
-             data:{registe_email:registe_email},
-             dataType: 'json',
-             success:function (data) {
-                 //data:{'status':false,'error_message':....,success_message:....}
-                 if(data.status==false){
-                     $('.registe-error-message').text(data.error_message)
-                 }
-                 else {
-                     ths.addClass('sending');
-                     var interval = setInterval(function(){
-                         ths.text("已发送(" + time + ")");
-                         time -= 1;
-                         if(time < 0){
-                             clearInterval(interval);
-                             ths.removeClass('sending');
-                             ths.text("获取验证码");
-                         }
-                     }, 1000);
-                 }
-             }
-         })
-
-     })
- }
- function registe() {
-    //注册按钮点击
-     $('#registe_button').click(function () {
-         $.ajax({
-             url: '/registe/',
-             method: 'POST',
-             dataType:'json',
-             data:$('#registe_form').serialize(), //序列化表单
-             success:function (data) {
-                 if(data.status==true){
-                     alert('注册成功并登录')
-                     window.location.href="/index/"
-                     {#location.reload()#}
-                 }
-                 else{
-                     $('.registe-error-message').text(data.error_message)
-                 }
-             }
-         })
-     })
- }
- function login() {
-    //模态对话框中的登录按钮，发送ajax请求
-     $('#login_button').click(function () {
-         $.ajax(
-             {
-                 url: '/login/',
-                 method: 'POST',
-                 dataType: 'json',
-                 data: $('#login_form').serialize(),
-                 success: function (data) {
-                     if (data.status == true) {
-                         alert('登录成功')
-                         window.location.href="/index/"
-                         {#location.reload()#}
-                     }
-                     else {
-                         $('.login-error-message').text(data.error_message)
-                     }
-                 }
-             }
-         )
-     })
-
- }
 
 </script>
 </html>
