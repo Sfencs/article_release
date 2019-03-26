@@ -9,6 +9,6 @@ def Email(email_list,content,subject='article-release--用户注册'):
     msg['To']=email_list[0]
     msg['Subject']=subject
     server=smtplib.SMTP('smtp.163.com',25)
-    server.login('article_release@163.com','article259863')
+    server.login('article_release@163.com','art863')
     server.sendmail('article_release@163.com',email_list,msg.as_string())
     server.quit()
